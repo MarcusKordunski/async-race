@@ -1,0 +1,83 @@
+import { store } from "./store"
+
+export function render() {
+  const html = `<button class="to-garage" disabled>TO GARAGE</button>
+  <button class="to-winners">TO WINNERS</button>
+
+  <div class="garage active">
+  ${renderGarage()}
+  </div>
+
+  <div class="winners">
+  ${renderWinners()}
+  </div>`
+
+  const root = document.createElement('div')
+  root.innerHTML = html
+  document.body.appendChild(root)
+}
+
+function renderGarage() {
+  return `<div class="create">
+ <input class="create__name" type="text">
+ <input class="create__color" type="color">
+ <button class="create__btn">CREATE</button>
+</div>
+<div class="update">
+ <input class="update__color" type="text">
+ <input class="update__color" type="color">
+ <button class="update__color">UPDATE</button>
+</div>
+<button class="race">RACE</button>
+<button class="reset">RESET</button>
+<button class="generate">GENERATE CARS</button>
+<h1>Garage (${store.garageCount} cars)</h1>
+<h2>Page ${store.garagePage}</h2>
+<div class="cars"></div>
+<button class="prev-garage">◄</button>
+<button class="next-garage">►</button>`
+}
+
+function renderWinners() {
+  return `<h1>Winners (${store.winnersCount} cars)</h1>
+  <h2>Page ${store.winnersPage}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Number</th>
+        <th>Car</th>
+        <th>Name</th>
+        <th>Wins</th>
+        <th>Best time</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+  <button class="prev-winners">◄</button>
+  <button class="next-winners">►</button>`
+}
+
+export function listenToViewButtons() {
+  const toGarage = document.querySelector('.to-garage') as HTMLElement
+  const toWinners = document.querySelector('.to-winners') as HTMLElement
+  const winners = document.querySelector('.garage') as HTMLElement
+  const garage = document.querySelector('.winners') as HTMLElement
+  toGarage.addEventListener('click', () => {
+    if (!toGarage.hasAttribute('disabled')) {
+      toGarage.setAttribute('disabled', 'disabled')
+      toWinners.removeAttribute('disabled')
+      garage.classList.toggle('active')
+      winners.classList.toggle('active')
+    }
+  })
+
+  toWinners.addEventListener('click', () => {
+    if (!toWinners.hasAttribute('disabled')) {
+      toWinners.setAttribute('disabled', 'disabled')
+      toGarage.removeAttribute('disabled')
+      winners.classList.toggle('active')
+      garage.classList.toggle('active')
+    }
+  })
+}

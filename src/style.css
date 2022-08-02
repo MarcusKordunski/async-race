@@ -1,0 +1,32 @@
+* {
+  box-sizing: border-box;
+  font-family: 'Rubik', sans-serif;
+}
+
+:root {
+  --black-bg: #313132;
+  --light-bg: #f5f5f7;
+  --black-font: #1d1d1f;
+  --light-font: #d6d6d6;
+}
+
+body {
+  background: var(--black-bg);
+  color: var(--light-font);
+}
+
+.winners {
+  display: none;
+}
+
+.garage {
+  display: none;
+}
+
+.winners.active {
+  display: block;
+}
+
+.garage.active {
+  display: block;
+}
