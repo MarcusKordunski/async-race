@@ -1,4 +1,4 @@
-import { deleteCar, getCars } from "./api"
+import { addCar, deleteCar, getCars } from "./api"
 import { carImageSprite } from "./assets/sprites"
 import { store } from "./store"
 
@@ -27,9 +27,9 @@ function renderGarage() {
  <button class="create__btn">CREATE</button>
 </div>
 <div class="update">
- <input class="update__color" type="text">
+ <input class="update__name" type="text">
  <input class="update__color" type="color">
- <button class="update__color" disabled>UPDATE</button>
+ <button class="update__btn" disabled>UPDATE</button>
 </div>
 <button class="race">RACE</button>
 <button class="reset">RESET</button>
@@ -132,5 +132,17 @@ export function listenRemoveButton() {
       console.log(store.garageCount)
       garageCounter.innerHTML = `Garage (${store.garageCount} cars)`
     }
+  })
+}
+
+export function listenCreateButton() {
+  const createBtn = document.querySelector('.create__btn') as HTMLElement
+  const createName = document.querySelector('.create__name') as HTMLInputElement
+  const createColor = document.querySelector('.create__color') as HTMLInputElement
+  // const cars = document.querySelector('.cars') as HTMLElement
+  createBtn.addEventListener('click', () => {
+    addCar(createName.value, createColor.value)
+    // const car = document.createElement('div')
+    // cars.appendChild()
   })
 }

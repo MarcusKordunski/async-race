@@ -33,3 +33,16 @@ export async function deleteCar(id: number) {
   //   })
   // }
 }
+
+export async function addCar(name: string, color: string) {
+  await fetch(`${garage}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: name,
+      color: color,
+    })
+  })
+}
