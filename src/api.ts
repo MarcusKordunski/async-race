@@ -46,3 +46,16 @@ export async function addCar(name: string, color: string) {
     })
   })
 }
+
+export async function updateCar(name: string, color: string, id: number) {
+  await fetch(`${garage}/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: name,
+      color: color,
+    })
+  })
+}

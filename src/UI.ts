@@ -1,4 +1,4 @@
-import { addCar, deleteCar, getCars } from "./api"
+import { addCar, deleteCar, getCars, updateCar } from "./api"
 import { carImageSprite } from "./assets/sprites"
 import { store } from "./store"
 
@@ -139,10 +139,32 @@ export function listenCreateButton() {
   const createBtn = document.querySelector('.create__btn') as HTMLElement
   const createName = document.querySelector('.create__name') as HTMLInputElement
   const createColor = document.querySelector('.create__color') as HTMLInputElement
-  // const cars = document.querySelector('.cars') as HTMLElement
-  createBtn.addEventListener('click', () => {
-    addCar(createName.value, createColor.value)
-    // const car = document.createElement('div')
-    // cars.appendChild()
+  const allCars = document.querySelector('.cars') as HTMLElement
+  createBtn.addEventListener('click', async () => {
+    await addCar(createName.value, createColor.value)
+    const carsApi = await getCars(1)
+    allCars.innerHTML += `${await renderCar(createName.value, createColor.value, carsApi.items[carsApi.items.length - 1].id)}`
   })
+}
+
+export function listenSelectUpdateButtons() {
+  const selectBtns = document.querySelectorAll('.select')
+  const updateName = document.querySelector('.update__name') as HTMLInputElement
+  const updateColor = document.querySelector('.update__color') as HTMLInputElement
+  const update = document.querySelector('.update__btn') as HTMLElement
+  selectBtns.forEach(select => select.addEventListener('click', async () => {
+    update.toggleAttribute('disabled')
+    update.removeEventListener('click', selectClick)
+    const currCar = document.getElementsByClassName(`car ${Number(select.className.split(' ')[1])}`)
+    async function selectClick() {
+      update.setAttribute('disabled', 'disabled')
+      updateCar(updateName.value, updateColor.value, Number(select.className.split(' ')[1]))
+      currCar[0].innerHTML = renderCar(updateName.value, updateColor.value, Number(select.className.split(' ')[1]))
+      update.removeEventListener('click', selectClick)
+      update.setAttribute('disabled', 'disabled')
+    }
+    if (!update.hasAttribute('disabled')) {
+      update.addEventListener('click', selectClick)
+    }
+  }))
 }
