@@ -1,5 +1,6 @@
-import { listenToViewButtons, render } from "./UI";
+import { listenRemoveButton, listenViewButtons, render } from "./UI";
 import './style.css'
 
 render();
-listenToViewButtons()
+listenViewButtons();
+listenRemoveButton()

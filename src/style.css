@@ -19,6 +19,7 @@ body {
   display: none;
 }
 
+
 .garage {
   display: none;
 }
@@ -29,4 +30,20 @@ body {
 
 .garage.active {
   display: block;
+}
+
+.car-img {
+  transform: scaleX(-1);
+  height: 28px;
+}
+
+.finish-img {
+  display: block;
+}
+
+.racing-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px white dashed;
 }

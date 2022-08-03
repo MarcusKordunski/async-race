@@ -1,3 +1,4 @@
+// import { store } from "./store"
 import { ICarsGarage, ICarsWinners } from "./types"
 
 const base = 'http://127.0.0.1:3000'
@@ -19,4 +20,16 @@ export async function getWinners(page: number, limit = 10, sort = 'id', order = 
     items: await response.json(),
     count: await response.headers.get('X-Total-Count')
   }
+}
+
+export async function deleteCar(id: number) {
+  await fetch(`${garage}/${id}`, {
+    method: 'DELETE'
+  })
+  // const winnersArr = store.winnersCars.filter(car => car.id === id)
+  // if (winnersArr.length === 1) {
+  //   await fetch(`${winners}/${id}`, {
+  //     method: 'DELETE'
+  //   })
+  // }
 }

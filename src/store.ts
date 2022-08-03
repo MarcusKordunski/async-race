@@ -10,5 +10,4 @@ export const store = {
   winnersPage: 1,
   winnersCount,
   winnersCars,
-  view: 'garage'
 }
