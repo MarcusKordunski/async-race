@@ -6,7 +6,7 @@ const base = 'http://127.0.0.1:3000'
 const garage = `${base}/garage`
 const winners = `${base}/winners`
 
-export async function getCars(page: number, limit = 7): Promise<ICarsGarage> {
+export async function getCars(page?: number, limit = 7): Promise<ICarsGarage> {
   const response = await fetch(`${garage}?_page=${page}&_limit=${limit}`)
   return {
     items: await response.json(),

@@ -1,6 +1,8 @@
 import { addCar, deleteCar, getCars, updateCar } from "./api"
 import { carImageSprite } from "./assets/sprites"
 import { store } from "./store"
+import { ICarsGarage } from "./types"
+import { generate100Cars } from "./utils"
 
 export function render() {
   const html = `<button class="to-garage" disabled>TO GARAGE</button>
@@ -35,7 +37,7 @@ function renderGarage() {
 <button class="reset">RESET</button>
 <button class="generate">GENERATE CARS</button>
 <h1 class="garage-counter">Garage (${store.garageCount} cars)</h1>
-<h2>Page ${store.garagePage}</h2>
+<h2 class="garage-page">Page ${store.garagePage}</h2>
 <div class="cars">
 ${renderAllCars()}
 </div>
@@ -43,7 +45,7 @@ ${renderAllCars()}
 <button class="next-garage">►</button>`
 }
 
-function renderCar(name: string, color: string, id: number) {
+export function renderCar(name: string, color: string, id: number) {
   return `
   <div class="car ${id}">
     <div>
@@ -70,8 +72,6 @@ function renderAllCars() {
   const cars = store.garageCars.map((car) => renderCar(car.name, car.color, car.id))
   return cars.join(' ')
 }
-
-console.log(store.garageCars)
 
 function renderWinners() {
   return `<h1>Winners (${store.winnersCount} cars)</h1>
@@ -126,10 +126,9 @@ export function listenRemoveButton() {
       const car = document.getElementsByClassName(`car ${carId}`)
       car[0].remove()
       const garageCounter = document.querySelector('.garage-counter') as HTMLElement
-      const cars = await getCars(1)
+      const cars = await getCars(store.garagePage)
 
       store.garageCount = cars.count
-      console.log(store.garageCount)
       garageCounter.innerHTML = `Garage (${store.garageCount} cars)`
     }
   })
@@ -140,10 +139,16 @@ export function listenCreateButton() {
   const createName = document.querySelector('.create__name') as HTMLInputElement
   const createColor = document.querySelector('.create__color') as HTMLInputElement
   const allCars = document.querySelector('.cars') as HTMLElement
+  const garageCounter = document.querySelector('.garage-counter') as HTMLElement
   createBtn.addEventListener('click', async () => {
+    const carsInPage = document.querySelectorAll('car')
     await addCar(createName.value, createColor.value)
-    const carsApi = await getCars(1)
-    allCars.innerHTML += `${await renderCar(createName.value, createColor.value, carsApi.items[carsApi.items.length - 1].id)}`
+    const carsApi = await getCars(store.garagePage)
+    store.garageCount = carsApi.count
+    garageCounter.innerHTML = `Garage (${store.garageCount} cars)`
+    if (carsApi.count !== null && carsInPage.length <= 7) {
+      allCars.innerHTML += `${await renderCar(createName.value, createColor.value, carsApi.items[carsApi.items.length - 1].id)}`
+    }
   })
 }
 
@@ -167,4 +172,82 @@ export function listenSelectUpdateButtons() {
       update.addEventListener('click', selectClick)
     }
   }))
+}
+
+export function listenNextPageButton() {
+  const next = document.querySelector('.next-garage') as HTMLElement
+  const prev = document.querySelector('.prev-garage') as HTMLElement
+  const allCars = document.querySelector('.cars') as HTMLElement
+  const pageNum = document.querySelector('.garage-page') as HTMLElement
+  next.addEventListener('click', async () => {
+    let cars = await getCars(store.garagePage) as ICarsGarage
+    const totalPages = Math.ceil(Number(cars.count) / 7)
+    if (store.garagePage < totalPages) {
+      cars = await getCars(store.garagePage += 1) as ICarsGarage
+      pageNum.innerHTML = `Page ${store.garagePage}`
+    } else {
+      cars = await getCars(store.garagePage) as ICarsGarage
+    }
+    store.garageCars = cars.items
+    allCars.innerHTML = renderAllCars()
+    if (store.garagePage === totalPages) {
+      next.setAttribute('disabled', 'disabled')
+    }
+    if (store.garagePage > 1) {
+      prev.removeAttribute('disabled')
+    }
+    listenSelectUpdateButtons()
+  })
+}
+
+export function listenPrevPageButton() {
+  const next = document.querySelector('.next-garage') as HTMLElement
+  const prev = document.querySelector('.prev-garage') as HTMLElement
+  const allCars = document.querySelector('.cars') as HTMLElement
+  const pageNum = document.querySelector('.garage-page') as HTMLElement
+  if (store.garagePage === 1) {
+    prev.setAttribute('disabled', 'disabled')
+  }
+  prev.addEventListener('click', async () => {
+    let cars = await getCars(store.garagePage) as ICarsGarage
+    const totalPages = Math.ceil(Number(cars.count) / 7)
+    if (store.garagePage !== 1) {
+      cars = await getCars(store.garagePage -= 1) as ICarsGarage
+      pageNum.innerHTML = `Page ${store.garagePage}`
+    } else {
+      cars = await getCars(store.garagePage) as ICarsGarage
+    }
+    console.log(store.garagePage)
+    store.garageCars = cars.items
+    allCars.innerHTML = renderAllCars()
+    if (store.garagePage === 1) {
+      prev.setAttribute('disabled', 'disabled')
+    }
+    if (store.garagePage < totalPages) {
+      next.removeAttribute('disabled')
+    }
+    listenSelectUpdateButtons()
+  })
+}
+
+export function listenGenerateCarsButton() {
+  const generate = document.querySelector('.generate') as HTMLElement
+  generate.addEventListener('click', generate100Cars)
+}
+
+export function listenResetButton() {
+  const reset = document.querySelector('.reset') as HTMLElement
+  const allCars = document.querySelector('.cars') as HTMLElement
+  const garageCounter = document.querySelector('.garage-counter') as HTMLElement
+  reset.addEventListener('click', async () => {
+    const carsNum = await getCars(undefined, 99999) as ICarsGarage
+    for (let i = 0; i < Number(carsNum.count); i++) {
+      const cars = await getCars(undefined, 99999) as ICarsGarage
+      await deleteCar(carsNum.items[i].id)
+      allCars.innerHTML = ''
+      store.garageCount = cars.count
+      garageCounter.innerHTML = `Garage (${store.garageCount} cars)`
+    }
+    garageCounter.innerHTML = `Garage (0 cars)`
+  })
 }
