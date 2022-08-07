@@ -1,10 +1,11 @@
 // import { store } from "./store"
-import { ICarsGarage, ICarsWinners } from "./types"
+import { ICarParams, ICarsGarage, ICarsWinners } from "./types"
 
 const base = 'http://127.0.0.1:3000'
 
 const garage = `${base}/garage`
 const winners = `${base}/winners`
+const engine = `${base}/engine`
 
 export async function getCars(page?: number, limit = 7): Promise<ICarsGarage> {
   const response = await fetch(`${garage}?_page=${page}&_limit=${limit}`)
@@ -58,4 +59,29 @@ export async function updateCar(name: string, color: string, id: number) {
       color: color,
     })
   })
+}
+
+export async function startCar(id: number, status = 'started'): Promise<ICarParams> {
+  const response = await fetch(`${engine}?id=${id}&status=${status}`, {
+    method: 'PATCH',
+  })
+  return await response.json()
+}
+
+export async function driveCar(id: number, status = 'drive') {
+  const response = await fetch(`${engine}?id=${id}&status=${status}`, {
+    method: 'PATCH',
+  })
+  if (!response.ok) {
+    await console.log(await response.text())
+  } else {
+    return await response.json()
+  }
+}
+
+export async function stopCar(id: number, status = 'stopped') {
+  const response = await fetch(`${engine}?id=${id}&status=${status}`, {
+    method: 'PATCH',
+  })
+  return response
 }

@@ -1,6 +1,7 @@
 import { addCar, getCars } from "./api"
 import { store } from "./store"
 import { renderCar } from "./UI"
+export let req = 0
 
 const brands = [
   'Volkswagen',
@@ -83,4 +84,27 @@ export async function generate100Cars() {
       allCars.innerHTML += `${renderCar(randomCarName, randomColor, carsApi.items[carsApi.items.length - 1].id)}`
     }
   }
+}
+
+export function animate(timeFraction: number, element: HTMLElement, duration: number) {
+
+  const start = performance.now()
+
+  requestAnimationFrame(function animate(time) {
+    let timeFraction = (time - start) / duration
+    if (timeFraction > 1) {
+      timeFraction = 1
+    }
+
+    draw(timeFraction, element)
+    if (timeFraction < 1) {
+      req = requestAnimationFrame(animate)
+    }
+
+  })
+}
+
+function draw(timeFraction: number, element: HTMLElement) {
+  element.style.position = 'absolute'
+  element.style.left = `calc((${timeFraction * 100}%) - ${timeFraction}*110px)`
 }

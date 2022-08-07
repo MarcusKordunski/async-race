@@ -38,7 +38,7 @@ body {
 }
 
 .finish-img {
-  display: block;
+  margin-left: auto;
 }
 
 .racing-line {
@@ -46,4 +46,8 @@ body {
   justify-content: space-between;
   align-items: flex-end;
   border-bottom: 2px white dashed;
+}
+
+.car {
+  margin: 10px 0 10px 0;
 }

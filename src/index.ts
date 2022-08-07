@@ -1,4 +1,4 @@
-import { listenCreateButton, listenGenerateCarsButton, listenNextPageButton, listenPrevPageButton, listenRemoveButton, listenResetButton, listenSelectUpdateButtons, listenViewButtons, render } from "./UI";
+import { listenClearButton, listenCreateButton, listenGenerateCarsButton, listenNextPageButton, listenPrevPageButton, listenRaceButton, listenRemoveButton, listenSelectUpdateButtons, listenStartButton, listenViewButtons, render } from "./UI";
 import './style.css'
 
 render();
@@ -9,4 +9,6 @@ listenSelectUpdateButtons()
 listenNextPageButton()
 listenPrevPageButton()
 listenGenerateCarsButton()
-listenResetButton()
+listenClearButton()
+listenStartButton()
+listenRaceButton()

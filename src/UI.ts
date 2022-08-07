@@ -1,8 +1,8 @@
-import { addCar, deleteCar, getCars, updateCar } from "./api"
+import { addCar, deleteCar, driveCar, getCars, startCar, updateCar } from "./api"
 import { carImageSprite } from "./assets/sprites"
 import { store } from "./store"
 import { ICarsGarage } from "./types"
-import { generate100Cars } from "./utils"
+import { animate, generate100Cars, req } from "./utils"
 
 export function render() {
   const html = `<button class="to-garage" disabled>TO GARAGE</button>
@@ -34,6 +34,7 @@ function renderGarage() {
  <button class="update__btn" disabled>UPDATE</button>
 </div>
 <button class="race">RACE</button>
+<button class="clear">DELETE ALL</button>
 <button class="reset">RESET</button>
 <button class="generate">GENERATE CARS</button>
 <h1 class="garage-counter">Garage (${store.garageCount} cars)</h1>
@@ -58,7 +59,7 @@ export function renderCar(name: string, color: string, id: number) {
       <button class="start ${id}">A</button>
       <button class="break ${id}">B</button>
     </div>
-    <div class="racing-line">
+    <div class="racing-line ${id}">
         <div class="car-img car-img ${id}">
           ${carImageSprite(color)}
         </div>
@@ -235,11 +236,11 @@ export function listenGenerateCarsButton() {
   generate.addEventListener('click', generate100Cars)
 }
 
-export function listenResetButton() {
-  const reset = document.querySelector('.reset') as HTMLElement
+export function listenClearButton() {
+  const clear = document.querySelector('.clear') as HTMLElement
   const allCars = document.querySelector('.cars') as HTMLElement
   const garageCounter = document.querySelector('.garage-counter') as HTMLElement
-  reset.addEventListener('click', async () => {
+  clear.addEventListener('click', async () => {
     const carsNum = await getCars(undefined, 99999) as ICarsGarage
     for (let i = 0; i < Number(carsNum.count); i++) {
       const cars = await getCars(undefined, 99999) as ICarsGarage
@@ -249,5 +250,38 @@ export function listenResetButton() {
       garageCounter.innerHTML = `Garage (${store.garageCount} cars)`
     }
     garageCounter.innerHTML = `Garage (0 cars)`
+  })
+}
+
+export function listenStartButton() {
+  const startButtons = document.querySelectorAll('.start')
+  startButtons.forEach(start => start.addEventListener('click', async () => {
+    const id = Number(start.className.split(' ')[1])
+    const currCar = <HTMLElement>document.getElementsByClassName(`car-img ${id}`)[0]
+    const responseStart = await startCar(id)
+    const travelTime = responseStart.distance / responseStart.velocity
+    animate(0, currCar, travelTime)
+    const responseDrive = await driveCar(id)
+
+    if (responseDrive === undefined) {
+      window.cancelAnimationFrame(req)
+    }
+  }))
+}
+
+export function listenRaceButton() {
+  const race = document.querySelector('.race') as HTMLElement
+  race.addEventListener('click', () => {
+    const cars = document.querySelectorAll<HTMLElement>('.car-img')
+    cars.forEach(async (car) => {
+      const id = Number(car.className.split(' ')[2])
+      const responseStart = await startCar(id)
+      const travelTime = responseStart.distance / responseStart.velocity
+      animate(0, car, travelTime)
+      const responseDrive = await driveCar(id)
+      if (responseDrive === undefined) {
+        window.cancelAnimationFrame(req)
+      }
+    })
   })
 }

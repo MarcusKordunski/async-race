@@ -19,3 +19,8 @@ interface ICarWinner {
   wins: number;
   time: number;
 }
+
+export interface ICarParams {
+  velocity: number;
+  distance: 500000;
+}
