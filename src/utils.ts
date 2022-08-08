@@ -96,7 +96,7 @@ export function animate(timeFraction: number, element: HTMLElement, duration: nu
       timeFraction = 1
     }
 
-    draw(timeFraction, element)
+    draw(timeFraction ** 5, element)
     if (timeFraction < 1) {
       req = requestAnimationFrame(animate)
     }
@@ -106,5 +106,5 @@ export function animate(timeFraction: number, element: HTMLElement, duration: nu
 
 function draw(timeFraction: number, element: HTMLElement) {
   element.style.position = 'absolute'
-  element.style.left = `calc((${timeFraction * 100}%) - ${timeFraction}*110px)`
+  element.style.left = `calc((${timeFraction * 100}%) + 13px - ${timeFraction}*120px)`
 }

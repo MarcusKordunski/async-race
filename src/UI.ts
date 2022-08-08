@@ -1,8 +1,9 @@
-import { addCar, deleteCar, driveCar, getCars, startCar, updateCar } from "./api"
+import { addCar, deleteCar, driveCar, getCars, startCar, stopCar, updateCar } from "./api"
 import { carImageSprite } from "./assets/sprites"
 import { store } from "./store"
-import { ICarsGarage } from "./types"
+import { IBestTime, ICarsGarage } from "./types"
 import { animate, generate100Cars, req } from "./utils"
+let bestTime: IBestTime[]
 
 export function render() {
   const html = `<button class="to-garage" disabled>TO GARAGE</button>
@@ -43,7 +44,8 @@ function renderGarage() {
 ${renderAllCars()}
 </div>
 <button class="prev-garage">◄</button>
-<button class="next-garage">►</button>`
+<button class="next-garage">►</button>
+<span class='show-winner'></span>`
 }
 
 export function renderCar(name: string, color: string, id: number) {
@@ -52,10 +54,10 @@ export function renderCar(name: string, color: string, id: number) {
     <div>
       <button class="select ${id}">SELECT</button>
       <button class="remove ${id}" >REMOVE</button>
-      <span><b>${name}</b></span>
+      <span class="car-name ${id}"><b>${name}</b></span>
     </div>
 
-    <div>
+    <div class="controls">
       <button class="start ${id}">A</button>
       <button class="break ${id}">B</button>
     </div>
@@ -271,17 +273,56 @@ export function listenStartButton() {
 
 export function listenRaceButton() {
   const race = document.querySelector('.race') as HTMLElement
-  race.addEventListener('click', () => {
+  bestTime = [{ name: '1', time: 1 }]
+  bestTime.length = 0
+  let carName = '' as string | null
+  race.addEventListener('click', async () => {
     const cars = document.querySelectorAll<HTMLElement>('.car-img')
-    cars.forEach(async (car) => {
+    await cars.forEach(async (car) => {
       const id = Number(car.className.split(' ')[2])
       const responseStart = await startCar(id)
       const travelTime = responseStart.distance / responseStart.velocity
+      carName = document.getElementsByClassName(`car-name ${id}`)[0].textContent
+      bestTime.push({
+        name: carName,
+        time: travelTime
+      })
       animate(0, car, travelTime)
       const responseDrive = await driveCar(id)
       if (responseDrive === undefined) {
         window.cancelAnimationFrame(req)
       }
+    })
+    const winner = document.querySelector('.show-winner') as HTMLElement
+    const best = await bestTime.sort((a, b) => a.time - b.time)
+    await console.log(best)
+    winner.textContent = await `${best[0].name} wins with time: ${best[0].time}`
+    winner.style.position = 'absolute'
+    winner.style.right = '20%'
+    winner.style.top = '60px'
+  })
+}
+
+export function listenBreakButton() {
+  const breakButtons = document.querySelectorAll('.break')
+  breakButtons.forEach(btn => btn.addEventListener('click', async () => {
+    const id = Number(btn.className.split(' ')[1])
+    const currCar = <HTMLElement>document.getElementsByClassName(`car-img ${id}`)[0]
+    await stopCar(id)
+    window.cancelAnimationFrame(req)
+    currCar.style.position = 'static'
+  })
+  )
+}
+
+export function listenResetButton() {
+  const reset = document.querySelector('.reset') as HTMLElement
+  reset.addEventListener('click', () => {
+    const cars = document.querySelectorAll<HTMLElement>('.car-img')
+    cars.forEach(async (car) => {
+      const id = Number(car.className.split(' ')[2])
+      car.style.position = 'static'
+      await stopCar(id)
     })
   })
 }

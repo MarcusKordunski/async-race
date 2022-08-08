@@ -24,3 +24,8 @@ export interface ICarParams {
   velocity: number;
   distance: 500000;
 }
+
+export interface IBestTime {
+  name: string | null;
+  time: number;
+}
