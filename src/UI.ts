@@ -1,8 +1,8 @@
-import { addCar, deleteCar, driveCar, getCars, startCar, stopCar, updateCar } from "./api"
+import { addCar, addWinner, deleteCar, driveCar, getCars, startCar, stopCar, updateCar } from "./api"
 import { carImageSprite } from "./assets/sprites"
 import { store } from "./store"
 import { IBestTime, ICarsGarage } from "./types"
-import { animate, generate100Cars, raceBtnLock, req } from "./utils"
+import { animate, generate100Cars, raceBtnLock, req, turnButtons, updateAllWinners } from "./utils"
 let bestTime: IBestTime[]
 
 export function render() {
@@ -60,7 +60,7 @@ export function renderCar(name: string, color: string, id: number) {
 
     <div class="controls">
       <button class="start ${id}">A</button>
-      <button class="break ${id}">B</button>
+      <button class="break ${id}" disabled>B</button>
     </div>
     <div class="racing-line ${id}">
         <div class="car-img car-img ${id}">
@@ -77,7 +77,23 @@ function renderAllCars() {
   return cars.join(' ')
 }
 
-function renderWinners() {
+export function renderWinnersRows() {
+  let res = ''
+  for (let i = 0; i < Number(store.winnersCount); i++) {
+    const car = store.garageCars.filter(item => item.id === store.winnersCars[i].id)[0]
+    res = res + `
+    <tr>
+      <td>${i + 1}</td>
+      <td class="car-icon">${carImageSprite(car.color)}</td>
+      <td>${car.name}</td>
+      <td>${store.winnersCars[i].wins}</td>
+      <td>${store.winnersCars[i].time}</td>
+    </tr>`
+  }
+  return res
+}
+
+export function renderWinners() {
   return `<h1>Winners (${store.winnersCount} cars)</h1>
   <h2>Page ${store.winnersPage}</h2>
   <table>
@@ -90,11 +106,12 @@ function renderWinners() {
         <th>Best time</th>
       </tr>
     </thead>
-    <tbody>
-    </tbody>
+    <tbody class="tbody">
+    ${renderWinnersRows()}
+</tbody>
   </table>
-  <button class="prev-winners">◄</button>
-  <button class="next-winners">►</button>`
+  <button class="prev-winners" >◄</button>
+    <button class="next-winners" >►</button>`
 }
 
 export function listenViewButtons() {
@@ -136,6 +153,7 @@ export function listenRemoveButton() {
       garageCounter.innerHTML = `Garage (${store.garageCount} cars)`
     }
     raceBtnLock()
+    await updateAllWinners()
   })
 }
 
@@ -203,6 +221,8 @@ export function listenNextPageButton() {
       prev.removeAttribute('disabled')
     }
     listenSelectUpdateButtons()
+    listenStartButton()
+    listenBreakButton()
   })
 }
 
@@ -223,7 +243,6 @@ export function listenPrevPageButton() {
     } else {
       cars = await getCars(store.garagePage) as ICarsGarage
     }
-    console.log(store.garagePage)
     store.garageCars = cars.items
     allCars.innerHTML = renderAllCars()
     if (store.garagePage === 1) {
@@ -233,6 +252,8 @@ export function listenPrevPageButton() {
       next.removeAttribute('disabled')
     }
     listenSelectUpdateButtons()
+    listenStartButton()
+    listenBreakButton()
   })
 }
 
@@ -258,6 +279,9 @@ export function listenClearButton() {
       race.setAttribute('disabled', 'disabled')
       store.garageCount = cars.count
       garageCounter.innerHTML = `Garage (${store.garageCount} cars)`
+      if (i === Number(carsNum.count)) {
+        await updateAllWinners()
+      }
     }
     garageCounter.innerHTML = `Garage (0 cars)`
     generate.removeAttribute('disabled')
@@ -276,39 +300,49 @@ export function listenStartButton() {
     const travelTime = responseStart.distance / responseStart.velocity
     animate(0, currCar, travelTime)
     const responseDrive = await driveCar(id)
-
     if (responseDrive === undefined) {
       window.cancelAnimationFrame(req)
+      turnButtons('on', currCar)
+      document.getElementsByClassName(`start ${id}`)[0].setAttribute('disabled', 'disabled')
     }
   }))
 }
 
 export function listenRaceButton() {
   const race = document.querySelector('.race') as HTMLElement
-  bestTime = [{ name: '1', time: 1 }]
-  let best = bestTime.sort((a, b) => a.time - b.time)
+  bestTime = [{ name: '1', time: 1, id: 1 }]
   let carName = '' as string | null
   const winner = document.querySelector('.show-winner') as HTMLElement
   race.addEventListener('click', async () => {
     bestTime.splice(0, bestTime.length)
+    let best = bestTime.sort((a, b) => a.time - b.time)
     const cars = document.querySelectorAll<HTMLElement>('.car-img')
+    let count = 0
     await cars.forEach(async (car) => {
       const id = Number(car.className.split(' ')[2])
       const responseStart = await startCar(id)
       const travelTime = responseStart.distance / responseStart.velocity
-      carName = document.getElementsByClassName(`car-name ${id}`)[0].textContent
+      carName = String(document.getElementsByClassName(`car-name ${id}`)[0].textContent)
       if (carName !== null) {
         await bestTime.push({
           name: carName,
-          time: travelTime
+          time: travelTime,
+          id: id
         })
       }
-      best = bestTime.sort((a, b) => a.time - b.time)
-      winner.textContent = `${best[0].name} wins with time: ${Math.floor(best[0].time) / 1000}s`
       animate(0, car, travelTime)
       const responseDrive = await driveCar(id)
       if (responseDrive === undefined) {
         window.cancelAnimationFrame(req)
+        winner.style.display = 'inline-block'
+        bestTime.pop()
+      }
+      count++
+      if (count === cars.length) {
+        best = bestTime.sort((a, b) => a.time - b.time)
+        winner.textContent = `${best[0].name} wins with time: ${Math.floor(best[0].time) / 1000}s`
+        await addWinner(best[0].id, 1, Math.floor(best[0].time) / 1000)
+        await updateAllWinners()
       }
     })
   })
@@ -317,11 +351,13 @@ export function listenRaceButton() {
 export function listenBreakButton() {
   const breakButtons = document.querySelectorAll('.break')
   breakButtons.forEach(btn => btn.addEventListener('click', async () => {
+    btn.setAttribute('disabled', 'disabled')
     const id = Number(btn.className.split(' ')[1])
     const currCar = <HTMLElement>document.getElementsByClassName(`car-img ${id}`)[0]
     await stopCar(id)
     window.cancelAnimationFrame(req)
     currCar.style.position = 'static'
+    turnButtons('on', currCar)
   })
   )
 }
@@ -329,6 +365,8 @@ export function listenBreakButton() {
 export function listenResetButton() {
   const reset = document.querySelector('.reset') as HTMLElement
   reset.addEventListener('click', () => {
+    document.querySelectorAll('.break').forEach(btn => btn.setAttribute('disabled', 'disabled'))
+    document.querySelectorAll('.start').forEach(btn => btn.removeAttribute('disabled'))
     const cars = document.querySelectorAll<HTMLElement>('.car-img')
     cars.forEach(async (car) => {
       const id = Number(car.className.split(' ')[2])

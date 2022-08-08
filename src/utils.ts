@@ -1,6 +1,6 @@
-import { addCar, getCars } from "./api"
+import { addCar, getCars, getWinners } from "./api"
 import { store } from "./store"
-import { renderCar } from "./UI"
+import { renderCar, renderWinners } from "./UI"
 export let req = 0
 
 const brands = [
@@ -116,20 +116,30 @@ export function animate(timeFraction: number, element: HTMLElement, duration: nu
   })
 }
 
-function draw(timeFraction: number, element: HTMLElement) {
+async function draw(timeFraction: number, element: HTMLElement) {
   const winner = document.querySelector('.show-winner') as HTMLElement
-  winner.style.display = 'none'
+  const id = Number(element.className.split(' ')[2])
+  document.getElementsByClassName(`break ${id}`)[0].removeAttribute('disabled')
   element.style.position = 'absolute'
-  turnButtons('off')
+  turnButtons('off', element)
   element.style.left = `calc((${timeFraction * 100}%) + 13px - ${timeFraction}*120px)`
-  if (timeFraction >= 1) {
+  if (timeFraction < 0.05) {
+    winner.style.display = 'none'
+  }
+  if (timeFraction >= 0.95) {
     winner.style.display = 'inline-block'
-    turnButtons('on')
+    turnButtons('on', element)
+    document.getElementsByClassName(`start ${id}`)[0].setAttribute('disabled', 'disabled')
+    document.getElementsByClassName(`break ${id}`)[0].removeAttribute('disabled')
   }
 }
 
-export function turnButtons(flag: 'on' | 'off') {
+export function turnButtons(flag: 'on' | 'off', element?: HTMLElement) {
   const btnArr = []
+  let id = 0
+  if (element) {
+    id = Number(element.className.split(' ')[2])
+  }
   btnArr.push(document.querySelector('.create__btn'))
   btnArr.push(document.querySelector('.update__btn'))
   btnArr.push(document.querySelector('.race'))
@@ -138,7 +148,11 @@ export function turnButtons(flag: 'on' | 'off') {
   btnArr.push(document.querySelector('.generate'))
   document.querySelectorAll('.select').forEach(item => btnArr.push(item))
   document.querySelectorAll('.remove').forEach(item => btnArr.push(item))
-  document.querySelectorAll('.start').forEach(item => btnArr.push(item))
+  if (element) {
+    btnArr.push(document.getElementsByClassName(`start ${id}`)[0])
+  } else {
+    document.querySelectorAll('.start').forEach(item => btnArr.push(item))
+  }
   btnArr.forEach(item => {
     if (flag === 'off' && item) {
       item.setAttribute('disabled', 'disabled')
@@ -156,4 +170,14 @@ export function raceBtnLock() {
   } else {
     race.removeAttribute('disabled')
   }
+}
+
+export async function updateAllWinners() {
+  const responseCars = await getCars(1, 999)
+  const responseWinners = await getWinners(1, 999)
+  store.winnersCars = responseWinners.items
+  store.winnersCount = responseWinners.count
+  store.garageCars = responseCars.items
+  const winnersDiv = document.querySelector('.winners') as HTMLElement
+  winnersDiv.innerHTML = renderWinners()
 }
