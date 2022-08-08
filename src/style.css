@@ -1,0 +1,72 @@
+* {
+  box-sizing: border-box;
+  font-family: 'Rubik', sans-serif;
+}
+
+:root {
+  --black-bg: #313132;
+  --light-bg: #f5f5f7;
+  --black-font: #1d1d1f;
+  --light-font: #d6d6d6;
+}
+
+body {
+  background: var(--black-bg);
+  color: var(--light-font);
+}
+
+.winners {
+  display: none;
+}
+
+
+.garage {
+  display: none;
+}
+
+.winners.active {
+  display: block;
+}
+
+.garage.active {
+  display: block;
+}
+
+.car-img {
+  transform: scaleX(-1);
+  height: 28px;
+}
+
+.finish-img {
+  margin-left: auto;
+}
+
+.racing-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px white dashed;
+}
+
+.car {
+  margin: 20px 0;
+  border-left: 2px solid #8d8d8d;
+  padding-left: 2px;
+  border-radius: 7px;
+}
+
+.garage-counter {
+  display: inline-block;
+}
+
+.show-winner {
+  margin-left: 20px;
+}
+
+.car-icon {
+  transform: scale(0.65) scaleX(-1);
+}
+
+td {
+  padding: 0 15px;
+}
