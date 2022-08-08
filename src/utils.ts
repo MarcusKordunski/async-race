@@ -66,7 +66,16 @@ const models = [
 ]
 
 export async function generate100Cars() {
+  const clear = document.querySelector('.clear') as HTMLElement
+  const generate = document.querySelector('.generate') as HTMLElement
+  const race = document.querySelector('.race') as HTMLElement
   for (let i = 0; i < 100; i++) {
+    if (i === 7) {
+      raceBtnLock()
+    }
+    clear.setAttribute('disabled', 'disabled')
+    generate.setAttribute('disabled', 'disabled')
+    race.setAttribute('disabled', 'disabled')
     const randomIndex1 = Math.floor(Math.random() * 28)
     const randomIndex2 = Math.floor(Math.random() * 28)
     const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0').toUpperCase();
@@ -84,6 +93,9 @@ export async function generate100Cars() {
       allCars.innerHTML += `${renderCar(randomCarName, randomColor, carsApi.items[carsApi.items.length - 1].id)}`
     }
   }
+  clear.removeAttribute('disabled')
+  generate.removeAttribute('disabled')
+  race.removeAttribute('disabled')
 }
 
 export function animate(timeFraction: number, element: HTMLElement, duration: number) {
@@ -105,6 +117,43 @@ export function animate(timeFraction: number, element: HTMLElement, duration: nu
 }
 
 function draw(timeFraction: number, element: HTMLElement) {
+  const winner = document.querySelector('.show-winner') as HTMLElement
+  winner.style.display = 'none'
   element.style.position = 'absolute'
+  turnButtons('off')
   element.style.left = `calc((${timeFraction * 100}%) + 13px - ${timeFraction}*120px)`
+  if (timeFraction >= 1) {
+    winner.style.display = 'inline-block'
+    turnButtons('on')
+  }
+}
+
+export function turnButtons(flag: 'on' | 'off') {
+  const btnArr = []
+  btnArr.push(document.querySelector('.create__btn'))
+  btnArr.push(document.querySelector('.update__btn'))
+  btnArr.push(document.querySelector('.race'))
+  btnArr.push(document.querySelector('.clear'))
+  btnArr.push(document.querySelector('.reset'))
+  btnArr.push(document.querySelector('.generate'))
+  document.querySelectorAll('.select').forEach(item => btnArr.push(item))
+  document.querySelectorAll('.remove').forEach(item => btnArr.push(item))
+  document.querySelectorAll('.start').forEach(item => btnArr.push(item))
+  btnArr.forEach(item => {
+    if (flag === 'off' && item) {
+      item.setAttribute('disabled', 'disabled')
+    } else if (item) {
+      item.removeAttribute('disabled')
+    }
+  })
+}
+
+export function raceBtnLock() {
+  const cars = document.querySelectorAll('.car')
+  const race = document.querySelector('.race') as HTMLElement
+  if (cars.length === 0) {
+    race.setAttribute('disabled', 'disabled')
+  } else {
+    race.removeAttribute('disabled')
+  }
 }

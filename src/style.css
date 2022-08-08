@@ -54,3 +54,11 @@ body {
   padding-left: 2px;
   border-radius: 7px;
 }
+
+.garage-counter {
+  display: inline-block;
+}
+
+.show-winner {
+  margin-left: 20px;
+}

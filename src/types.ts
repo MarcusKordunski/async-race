@@ -26,6 +26,6 @@ export interface ICarParams {
 }
 
 export interface IBestTime {
-  name: string | null;
+  name: string;
   time: number;
 }

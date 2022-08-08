@@ -2,7 +2,7 @@ import { addCar, deleteCar, driveCar, getCars, startCar, stopCar, updateCar } fr
 import { carImageSprite } from "./assets/sprites"
 import { store } from "./store"
 import { IBestTime, ICarsGarage } from "./types"
-import { animate, generate100Cars, req } from "./utils"
+import { animate, generate100Cars, raceBtnLock, req } from "./utils"
 let bestTime: IBestTime[]
 
 export function render() {
@@ -34,18 +34,19 @@ function renderGarage() {
  <input class="update__color" type="color">
  <button class="update__btn" disabled>UPDATE</button>
 </div>
+<div>
 <button class="race">RACE</button>
 <button class="clear">DELETE ALL</button>
 <button class="reset">RESET</button>
 <button class="generate">GENERATE CARS</button>
-<h1 class="garage-counter">Garage (${store.garageCount} cars)</h1>
+</div>
+<h1 class="garage-counter">Garage (${store.garageCount} cars)</h1> <span class='show-winner'></span>
 <h2 class="garage-page">Page ${store.garagePage}</h2>
 <div class="cars">
 ${renderAllCars()}
 </div>
 <button class="prev-garage">◄</button>
-<button class="next-garage">►</button>
-<span class='show-winner'></span>`
+<button class="next-garage">►</button>`
 }
 
 export function renderCar(name: string, color: string, id: number) {
@@ -134,6 +135,7 @@ export function listenRemoveButton() {
       store.garageCount = cars.count
       garageCounter.innerHTML = `Garage (${store.garageCount} cars)`
     }
+    raceBtnLock()
   })
 }
 
@@ -152,6 +154,7 @@ export function listenCreateButton() {
     if (carsApi.count !== null && carsInPage.length <= 7) {
       allCars.innerHTML += `${await renderCar(createName.value, createColor.value, carsApi.items[carsApi.items.length - 1].id)}`
     }
+    raceBtnLock()
   })
 }
 
@@ -240,6 +243,8 @@ export function listenGenerateCarsButton() {
 
 export function listenClearButton() {
   const clear = document.querySelector('.clear') as HTMLElement
+  const race = document.querySelector('.race') as HTMLElement
+  const generate = document.querySelector('.generate') as HTMLElement
   const allCars = document.querySelector('.cars') as HTMLElement
   const garageCounter = document.querySelector('.garage-counter') as HTMLElement
   clear.addEventListener('click', async () => {
@@ -248,10 +253,17 @@ export function listenClearButton() {
       const cars = await getCars(undefined, 99999) as ICarsGarage
       await deleteCar(carsNum.items[i].id)
       allCars.innerHTML = ''
+      generate.setAttribute('disabled', 'disabled')
+      clear.setAttribute('disabled', 'disabled')
+      race.setAttribute('disabled', 'disabled')
       store.garageCount = cars.count
       garageCounter.innerHTML = `Garage (${store.garageCount} cars)`
     }
     garageCounter.innerHTML = `Garage (0 cars)`
+    generate.removeAttribute('disabled')
+    clear.removeAttribute('disabled')
+    race.removeAttribute('disabled')
+    raceBtnLock()
   })
 }
 
@@ -274,32 +286,31 @@ export function listenStartButton() {
 export function listenRaceButton() {
   const race = document.querySelector('.race') as HTMLElement
   bestTime = [{ name: '1', time: 1 }]
-  bestTime.length = 0
+  let best = bestTime.sort((a, b) => a.time - b.time)
   let carName = '' as string | null
+  const winner = document.querySelector('.show-winner') as HTMLElement
   race.addEventListener('click', async () => {
+    bestTime.splice(0, bestTime.length)
     const cars = document.querySelectorAll<HTMLElement>('.car-img')
     await cars.forEach(async (car) => {
       const id = Number(car.className.split(' ')[2])
       const responseStart = await startCar(id)
       const travelTime = responseStart.distance / responseStart.velocity
       carName = document.getElementsByClassName(`car-name ${id}`)[0].textContent
-      bestTime.push({
-        name: carName,
-        time: travelTime
-      })
+      if (carName !== null) {
+        await bestTime.push({
+          name: carName,
+          time: travelTime
+        })
+      }
+      best = bestTime.sort((a, b) => a.time - b.time)
+      winner.textContent = `${best[0].name} wins with time: ${Math.floor(best[0].time) / 1000}s`
       animate(0, car, travelTime)
       const responseDrive = await driveCar(id)
       if (responseDrive === undefined) {
         window.cancelAnimationFrame(req)
       }
     })
-    const winner = document.querySelector('.show-winner') as HTMLElement
-    const best = await bestTime.sort((a, b) => a.time - b.time)
-    await console.log(best)
-    winner.textContent = await `${best[0].name} wins with time: ${best[0].time}`
-    winner.style.position = 'absolute'
-    winner.style.right = '20%'
-    winner.style.top = '60px'
   })
 }
 
