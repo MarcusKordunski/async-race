@@ -6,7 +6,7 @@
 
 ## Getting Started
 
-<b>Attention: To see app content you need to start this [server](https://github.com/mikhama/async-race-api)</b>
+<b>Warning: To see app content you need to start this [server](https://github.com/mikhama/async-race-api)</b>
 
 To download the project:
 ```
